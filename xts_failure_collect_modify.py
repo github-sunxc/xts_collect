@@ -4,22 +4,20 @@ import sys
 import datetime
 import pandas
 
-def save_df_to_excel(update_df, filename, sheet_name):
+def save_df_to_excel(new_case_df, sheet_name):
     '''
-    "openpyxl.load_workbook" is not work on my environment, so I have to
-    using a loop to substitute it, The purpose is to prevent overwriting other sheets.
+    To reduce the risk of data being overwritten, refactoring the function, 
+    will not modify the old table, the data will be written to a new table. 
     '''
-    df = pandas.read_excel(filename,sheet_name=None)
-    writer = pandas.ExcelWriter(filename)
-    
-    print('===>start to write data into %s' %(filename))
-    for sheet in df.keys():
-        if(sheet == sheet_name):
-            update_df.to_excel(writer,index=False,sheet_name=sheet_name)
-        else:
-            df[sheet].to_excel(writer,index=False,sheet_name=sheet)
+    filename = sheet_name + 'new_failed_case'
+    file_index = 1
+    # find a suitable filename to avoid overwritten
+    while os.isexist(name = filename + '.xlsx') :
+        filename = filename + str(file_index)
+        file_index = file_index + 1
 
-    writer.save()
+    print('===>start to write data into %s.xlsx' %(filename))
+    new_case_df.to_excel(filename + '.xlsx', sheet_name = sheet_name)
 
 
 def write_excel(failure_data, need_check_table, test_type, board_type):
@@ -45,7 +43,6 @@ def write_excel(failure_data, need_check_table, test_type, board_type):
     need_check_table_df = pandas.read_excel(
         need_check_table, sheet_name=test_type, skiprows=0)
     lines_need_check_table_df = len(need_check_table_df)
-    need_check_table_df_copy = need_check_table_df
 
     if(board_type == "8QM"):
         board_type_column = 6  # G column
@@ -64,6 +61,9 @@ def write_excel(failure_data, need_check_table, test_type, board_type):
     elif(board_type == "8ULP9"):
         board_type_column = 13  # N column
 
+    new_case_df = pandas.DataFrame(data=None, index=None, columns=[
+                                                "Case Name", "Module", "Owner", "Status", "Detail", "RC version", "8QM", "8QXP", "8MM", "8MP", "8MQ", "8MN", "8ULP", "8ULP9"])
+
     if(lines_need_check_table_df > 0):
     
         for need_update_df_num in range(0, lines_to_check):
@@ -71,17 +71,21 @@ def write_excel(failure_data, need_check_table, test_type, board_type):
             for to_check_case_num in range(0, lines_need_check_table_df):
                 if (need_check_table_df.iloc[to_check_case_num, 0] == failure_result_to_add_df.iloc[need_update_df_num, 0] and 
                 need_check_table_df.iloc[to_check_case_num, 1] == failure_result_to_add_df.iloc[need_update_df_num, 1]):
-                    need_check_table_df_copy.iloc[to_check_case_num, board_type_column] = 'y'
+                    # Recorded case had been fixed by owner, it seems not essential to mark it again. 
+                    # but stay this step will not influent our output. 
+                    # need_check_table_df.iloc[to_check_case_num, board_type_column] = 'y'
+                    # new_case_df = pandas.concat([new_case_df, need_check_table_df.iloc[to_check_case_num: to_check_case_num+1]], ignore_index=True)
                     flag = 1
                     break
             if (flag == 0): 
-                need_check_table_df_copy = pandas.concat([need_check_table_df_copy,
+                # Record new happened case only
+                new_case_df = pandas.concat([new_case_df,
                 failure_result_to_add_df.iloc[need_update_df_num:need_update_df_num+1]], ignore_index=True)
 
-        # Sorted for convenience review
-        need_check_table_df_copy = need_check_table_df_copy.sort_values(by='Module' ,kind='mergesort')
+        # Sort to get a more convenience review
+        new_case_df = new_case_df.sort_values(by='Module' ,kind='mergesort')
 
-        save_df_to_excel(need_check_table_df_copy,need_check_table,test_type)
+        save_df_to_excel(new_case_df,need_check_table,test_type)
 
     else: # empty table, dump fail case into it
         save_df_to_excel(after_compare_need_to_add_cases,need_check_table,test_type)
