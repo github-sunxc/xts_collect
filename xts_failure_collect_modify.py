@@ -12,12 +12,12 @@ def save_df_to_excel(new_case_df, sheet_name):
     filename = sheet_name + 'new_failed_case'
     file_index = 1
     # find a suitable filename to avoid overwritten
-    while os.isexist(name = filename + '.xlsx') :
+    while os.path.isfile(filename + '.xlsx') :
         filename = filename + str(file_index)
         file_index = file_index + 1
 
     print('===>start to write data into %s.xlsx' %(filename))
-    new_case_df.to_excel(filename + '.xlsx', sheet_name = sheet_name)
+    new_case_df.to_excel(filename + '.xlsx', sheet_name = sheet_name, index = False)
 
 
 def write_excel(failure_data, need_check_table, test_type, board_type):
@@ -85,10 +85,10 @@ def write_excel(failure_data, need_check_table, test_type, board_type):
         # Sort to get a more convenience review
         new_case_df = new_case_df.sort_values(by='Module' ,kind='mergesort')
 
-        save_df_to_excel(new_case_df,need_check_table,test_type)
+        save_df_to_excel(new_case_df,test_type)
 
     else: # empty table, dump fail case into it
-        save_df_to_excel(after_compare_need_to_add_cases,need_check_table,test_type)
+        save_df_to_excel(after_compare_need_to_add_cases,test_type)
 
     return failure_result
 

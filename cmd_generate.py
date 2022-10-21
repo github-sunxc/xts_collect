@@ -32,25 +32,22 @@ def process_result(input_excel, test_type, board):
     filename = "cmd_{0}.txt".format(board)
     print('===>Start write command in %s' %(filename))
 
-    filename = open("cmd_8qm.txt", "a")
-    filename.write("run cts ")
+    cmd_file = open(filename, "a")
+    cmd_file.write("run cts ")
 
     for line in range(0, check_table_len):
-        if (check_table_df.iloc[line, board_num] == 'y' and check_table_df.iloc[line, 5] is np.nan):
-            filename.write("--include-filter ")
-            filename.write("\"")
-            filename.write(check_table_df.iloc[line, 1])
+        if (check_table_df.iloc[line, board_num] == 'y') and pandas.isnull(check_table_df.iloc[line, 5]):
+            cmd_file.write("--include-filter ")
+            cmd_file.write("\"")
+            cmd_file.write(check_table_df.iloc[line, 1])
             if(check_table_df.iloc[line, 0] is np.nan):
-                filename.write("\" ")
+                cmd_file.write("\" ")
                 print("Incomplete")
             else:
-                filename.write(" ")
-                filename.write(check_table_df.iloc[line, 0])
-                filename.write("\" ")
-    filename.close()
-
-    filename = open("cmd_8mp.txt", "a")
-    filename.write("run cts ")
+                cmd_file.write(" ")
+                cmd_file.write(check_table_df.iloc[line, 0])
+                cmd_file.write("\" ")
+    cmd_file.close()
 
 
 if __name__ == '__main__':
