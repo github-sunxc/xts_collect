@@ -47,7 +47,7 @@ def process_result(input_excel, test_type, board):
     filename = "cmd_{0}.txt".format(board)
     print('===>Start write command in %s' %(filename))
 
-    cmd_file = open(filename, "a")
+    cmd_file = open(filename, "w")
     cmd_file.write(command_head)
 
     for line in range(0, check_table_len):

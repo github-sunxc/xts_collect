@@ -4,20 +4,39 @@ import sys
 import datetime
 import pandas
 
-def save_df_to_excel(new_case_df, sheet_name):
+def save_df_to_excel(new_case_df, sheet_name, board_type):
     '''
-    To reduce the risk of data being overwritten, refactoring the function, 
-    will not modify the old table, the data will be written to a new table. 
+    Refactoring the function, all failed case will add into 'new_fail_case.xlsx', 
+    will not modify the old table. 
     '''
-    filename = sheet_name + 'new_failed_case'
-    file_index = 1
-    # find a suitable filename to avoid overwritten
-    while os.path.isfile(filename + '.xlsx') :
-        filename = filename + str(file_index)
-        file_index = file_index + 1
+    filename = 'new_fail_case.xlsx'
+    if (os.path.isfile(filename)) :
+        print('===>file %s not exist, creat it now' %(filename))
+        print('===>start to write data into %s' %(filename))
+        new_case_df.to_excel(filename + '.xlsx', sheet_name = sheet_name, index = False)
+    else :
+        df = pandas.read_excel(filename,sheet_name=None)
+        writer = pandas.ExcelWriter(filename)
 
-    print('===>start to write data into %s.xlsx' %(filename))
-    new_case_df.to_excel(filename + '.xlsx', sheet_name = sheet_name, index = False)
+        print('===>start to write data into %s' %(filename))
+        for sheet in df.keys():
+            if(sheet == sheet_name):
+                write_df = df[sheet]
+                for old_item_index in len(df[sheet]) :
+                    flag = 0
+                    for new_item_index in len(new_case_df) :
+                        if (df[sheet].iloc[old_item_index, 0] == new_case_df.iloc[new_item_index, 0] and 
+                        df[sheet].iloc[old_item_index, 1] == new_case_df.iloc[new_item_index, 1]) :
+                            write_df[board_type][old_item_index] = 'y'
+                            flag = 1
+                            break
+                    if (flag == 0) :
+                        write_df = pandas.concat([write_df, new_case_df.iloc[new_item_index: new_item_index+1]])
+                write_df.to_excel(writer,index=False,sheet_name=sheet)
+            else :
+                df[sheet].to_excel(writer,index=False,sheet_name=sheet)
+
+        writer.save()
 
 
 def write_excel(failure_data, need_check_table, test_type, board_type):
@@ -85,10 +104,10 @@ def write_excel(failure_data, need_check_table, test_type, board_type):
         # Sort to get a more convenience review
         new_case_df = new_case_df.sort_values(by='Module' ,kind='mergesort')
 
-        save_df_to_excel(new_case_df,test_type)
+        save_df_to_excel(new_case_df,test_type,board_type)
 
     else: # empty table, dump fail case into it
-        save_df_to_excel(after_compare_need_to_add_cases,test_type)
+        save_df_to_excel(after_compare_need_to_add_cases,test_type,board_type)
 
     return failure_result
 
