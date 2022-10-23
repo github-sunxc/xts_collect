@@ -29,11 +29,26 @@ def process_result(input_excel, test_type, board):
         print("board error")
         sys.exit()
 
+    command_head = 'run '
+    if (test_type.lower() == 'cts'):
+        command_head = command_head + 'cts '
+    elif (test_type.lower() == 'cts-on-gsi'):
+        command_head = command_head + 'cts-on-gsi '
+    elif (test_type.lower() == 'vts'):
+        command_head = command_head + 'vts '
+    elif (test_type.lower() == 'gts'):
+        command_head = command_head + 'gts '
+    elif (test_type.lower() == 'sts'):
+        command_head = command_head + 'sts-dynamic-full '
+    else :
+        print("test type error")
+        sys.exit()
+        
     filename = "cmd_{0}.txt".format(board)
     print('===>Start write command in %s' %(filename))
 
     cmd_file = open(filename, "a")
-    cmd_file.write("run cts ")
+    cmd_file.write(command_head)
 
     for line in range(0, check_table_len):
         if (check_table_df.iloc[line, board_num] == 'y') and pandas.isnull(check_table_df.iloc[line, 5]):
