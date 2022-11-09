@@ -44,7 +44,7 @@ def process_result(input_excel, test_type, board):
         print("test type error")
         sys.exit()
         
-    filename = "cmd_{0}.txt".format(board)
+    filename = "cmd_{0}_{1}.txt".format(board, test_type)
     print('===>Start write command in %s' %(filename))
 
     cmd_file = open(filename, "a")
